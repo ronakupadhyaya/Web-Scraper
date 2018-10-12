@@ -12,7 +12,6 @@ public class Scraper {
 
 	public static void main(String[] args) {
 		String url = "https://www.primestoragegroup.com/self-storage/ct/brookfield/ct09";
-		parseWebsite(url).print();
 	}
 	
 	public static ArrayList<String> parseFeatures(String url) {
