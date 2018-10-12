@@ -4,16 +4,58 @@ import java.util.ArrayList;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;;
+import org.jsoup.select.Elements;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 
 public class Scraper {
 
 	public static void main(String[] args) {
-		String url = "https://www.primestoragegroup.com/self-storage/ct/brookfield/ct09";
-		parse(url).print();
+		String url = "https://www.primestoragegroup.com/self-storage/ct/brookfield/ct09/#/units";
+		ArrayList<Unit> units = parseUnits(url);
+		for(int i = 0; i < units.size(); i++) {
+			units.get(i).print();
+		}
 	}
 	
-	public static Website parse(String url) {
+	public static ArrayList<Unit> parseUnits(String url) {
+		ArrayList<Unit> units = new ArrayList<Unit>();
+		
+		System.setProperty("webdriver.chrome.driver", "/Users/digantupadhyaya/Downloads/chromedriver");
+		WebDriver driver = new ChromeDriver();
+		driver.get(url);
+		Document homepage = Jsoup.parse(driver.getPageSource());;
+		Elements elements = homepage.select("div.unit-info");
+		
+		for(int i = 0; i < elements.size(); i++) {
+			Unit unit = parseUnit(elements, i);
+			units.add(unit);
+		}
+		
+		return units;
+	}
+	
+	public static Unit parseUnit(Elements units, int index) {
+		Unit unit = new Unit();
+		
+		Element element = units.get(index);
+		
+		unit.dimensions = element.select("span.sss-unit-size").first().text();
+
+		unit.amenities = element.select("span.sss-unit-amenities ul").first().text();
+
+		unit.unitPrice = element.select("p.unit-price").first().text();
+
+		unit.onlinePrice = element.select("p.online-price").first().text();
+
+		unit.specialOffer = element.select("span.unit-special-offer").first().text();
+
+		unit.description = element.select("div.sss-unit-description").first().text();
+		
+		return unit;
+	}
+	
+	public static Website parseWebsite(String url) {
 		Website website = new Website();
 		Document homepage;
 		Document hours;
