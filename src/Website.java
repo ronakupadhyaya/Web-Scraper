@@ -14,9 +14,11 @@ public class Website {
 	public String state;
 	public String zip;
 	public HashMap<String, String> socialMedia;
+	public ArrayList<String> features;
 
 	public Website() {
 		socialMedia = new HashMap<String, String>();
+		features = new ArrayList<String>();
 	}
 	
 	public void print() {
@@ -33,6 +35,9 @@ public class Website {
 		System.out.println("Zip: " + zip);
 		for(String site : socialMedia.keySet()) {
 			System.out.println(site + " " + socialMedia.get(site));
+		}
+		for(int i = 0; i < features.size(); i++) {
+			System.out.println(features.get(i));
 		}
 	}
 }

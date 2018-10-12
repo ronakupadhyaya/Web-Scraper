@@ -11,11 +11,26 @@ import org.openqa.selenium.chrome.ChromeDriver;
 public class Scraper {
 
 	public static void main(String[] args) {
-		String url = "https://www.primestoragegroup.com/self-storage/ct/brookfield/ct09/#/units";
-		ArrayList<Unit> units = parseUnits(url);
-		for(int i = 0; i < units.size(); i++) {
-			units.get(i).print();
+		String url = "https://www.primestoragegroup.com/self-storage/ct/brookfield/ct09";
+		parseWebsite(url).print();
+	}
+	
+	public static ArrayList<String> parseFeatures(String url) {
+		ArrayList<String> features = new ArrayList<String>();
+		Document page;
+		try {
+			page = Jsoup.connect(url).get();
+			Elements ul = page.select("div.html-content").get(2).select("ul").first().select("li");
+			for(int i = 0; i < ul.size(); i++) {
+				Element li = ul.select("li").get(i);
+				features.add(li.text());
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		
+		return features;
 	}
 	
 	public static ArrayList<Unit> parseUnits(String url) {
@@ -89,6 +104,8 @@ public class Scraper {
 			for(int i = 0; i < links.size(); i++) {
 				website.socialMedia.put(links.get(i).attr("title"), links.get(i).attr("abs:href"));
 			}
+			
+			website.features = parseFeatures(url + "/features");
 			
 		} catch (IOException e) {
 			e.printStackTrace();
