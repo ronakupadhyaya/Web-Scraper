@@ -11,6 +11,7 @@ public class Scraper {
 			Facility facility = facilities.get(i);
 			System.out.println(i + ": " + facility.url);
 			facility.parse();
+			
 		}
 	}
 	

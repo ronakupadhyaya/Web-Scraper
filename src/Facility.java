@@ -25,7 +25,7 @@ public class Facility {
 	
 	public void parse() {
 		this.website = parseWebsite(url);
-//		this.features = parseFeatures(url + "/features");
+		this.features = parseFeatures(url + "/features");
 		
 	}
 	
@@ -36,7 +36,8 @@ public class Facility {
 			page = Jsoup.connect(url).get();
 			if(page.select("div.html-content") != null && 
 					page.select("div.html-content").size() > 2 &&
-					page.select("div.html-content").get(2).select("ul") != null) {
+					page.select("div.html-content").get(2).select("ul") != null &&
+					page.select("div.html-content").get(2).select("ul").first() != null) {
 				Elements ul = page.select("div.html-content").get(2).select("ul").first().select("li");
 				for(int i = 0; i < ul.size(); i++) {
 					Element li = ul.select("li").get(i);
