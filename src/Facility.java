@@ -14,19 +14,21 @@ public class Facility {
 	public String url;
 	public Website website;
 	public ArrayList<String> features;
+	public ArrayList<Unit> units;
 	
 	
 	public Facility(String id, String name, String url) {
 		this.id = id;
 		this.name = name;
 		this.url = url;
-		this.features = new ArrayList<String>(); 
+		this.features = new ArrayList<String>();
+		units = new ArrayList<Unit>();
 	}
 	
 	public void parse() {
-		this.website = parseWebsite(url);
-		this.features = parseFeatures(url + "/features");
-		
+//		this.website = parseWebsite(url);
+//		this.features = parseFeatures(url + "/features");
+		this.units = parseUnits(url + "/#/units?category=all");
 	}
 	
 	public static ArrayList<String> parseFeatures(String url) {
@@ -66,6 +68,7 @@ public class Facility {
 			units.add(unit);
 		}
 		
+		driver.close();
 		return units;
 	}
 	
