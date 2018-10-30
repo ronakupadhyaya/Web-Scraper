@@ -26,9 +26,9 @@ public class Facility {
 	}
 	
 	public void parse() {
-//		this.website = parseWebsite(url);
-//		this.features = parseFeatures(url + "/features");
-		this.units = parseUnits(url + "/#/units?category=all");
+		this.website = parseWebsite(url);
+		this.features = parseFeatures(url + "/features");
+//		this.units = parseUnits(url + "/#/units?category=all");
 	}
 	
 	public static ArrayList<String> parseFeatures(String url) {

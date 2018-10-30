@@ -7,13 +7,15 @@ import java.util.Scanner;
 public class Scraper {
 
 	public static void main(String[] args) {
-		ArrayList<Facility> facilities = readFileByLine("prime_group_urls.csv");
+		ArrayList<Facility> facilities = readFileByLine("for_ronak_updated_prime_urls.csv");
 		for(int i = 0; i < 10; i++) {
 			Facility facility = facilities.get(i);
 			facility.parse();
 			System.out.println(i + ": " + facility.url);
 		}
-		writeUnitsFileByLine("units.csv", facilities);
+		writeWebsiteFileByLine("website.csv", facilities);
+		writeFeaturesFileByLine("features.csv", facilities);
+//		writeUnitsFileByLine("units.csv", facilities);
 	}
 	
 	public static void writeUnitsFileByLine(String filename, ArrayList<Facility> facilities) {
@@ -24,15 +26,17 @@ public class Scraper {
 			
 			sb.append("Name");
 			sb.append(",");
+			sb.append("URL");
+			sb.append(",");
 			sb.append("Dimensions");
 			sb.append(",");
 			sb.append("Amenities");
 			sb.append(",");
-			sb.append("Unit Price");
+			sb.append("Unit_Price");
 			sb.append(",");
-			sb.append("Online Price");
+			sb.append("Online_Price");
 			sb.append(",");
-			sb.append("Special Offer");
+			sb.append("Special_Offer");
 			sb.append(",");
 			sb.append("Description");
 			sb.append("\n");
@@ -40,11 +44,17 @@ public class Scraper {
 			for(int i = 0; i < 10; i++) {
 				Facility facility = facilities.get(i);
 				sb.append(facility.name);
+				sb.append(",");
+				String url = facility.url;
+				sb.append(url);
 				sb.append("\n");
 				ArrayList<Unit> units = facility.units;
 				if(units != null && units.size() > 0) {
 					for(int j = 0; j < units.size(); j++) {
 						Unit unit = units.get(j);
+						sb.append(facility.name);
+						sb.append(",");
+						sb.append(url);
 						sb.append(",");
 						
 						String dimensions = unit.dimensions;
@@ -121,19 +131,23 @@ public class Scraper {
 	        
 			sb.append("Name");
 			sb.append(",");
+			sb.append("UID");
+			sb.append(",");
+			sb.append("URL");
+			sb.append(",");
 			sb.append("Image");
 			sb.append(",");
 			sb.append("Description");
 			sb.append(",");
-			sb.append("Customer Number");
+			sb.append("Customer_Number");
 			sb.append(",");
-			sb.append("Sales Number");
+			sb.append("Sales_Number");
 			sb.append(",");
 			sb.append("Email");
 			sb.append(",");
-			sb.append("Front Office Hours");
+			sb.append("Front_Office_Hours");
 			sb.append(",");
-			sb.append("Access Hours");
+			sb.append("Access_Hours");
 			sb.append(",");
 			sb.append("Street");
 			sb.append(",");
@@ -147,6 +161,14 @@ public class Scraper {
 			for(int i = 0; i < 10; i++) {
 				Facility facility = facilities.get(i);
 				sb.append(facility.name);
+				sb.append(",");
+				
+				String url = facility.url;
+				String[] arr = url.split("/");
+				sb.append(arr[arr.length - 1]);
+				sb.append(",");
+				sb.append(url);
+				
 				Website website = facility.website;
 				if(website == null) {
 					sb.append("\n");	
@@ -156,7 +178,7 @@ public class Scraper {
 				}
 				
 				String image = website.image;
-				if(image.contains(",")) {
+				if(image != null && image.contains(",")) {
 					sb.append("\""+ image + "\"");
 				}
 				else {
@@ -165,7 +187,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String description = website.description;
-				if(description.contains(",")) {
+				if(description != null && description.contains(",")) {
 					sb.append("\""+ description + "\"");
 				}
 				else {
@@ -174,16 +196,18 @@ public class Scraper {
 				sb.append(",");
 				
 				String customerNumber = website.customerNumber;
-				if(customerNumber.contains(",")) {
-					sb.append("\""+ customerNumber + "\"");
+				if(customerNumber != null && customerNumber.contains(",")) {
+					sb.append("\""+ customerNumber.substring(33, 47) + "\"");
 				}
 				else {
-					sb.append(customerNumber);
+					if(customerNumber != null) {
+						sb.append(customerNumber.substring(33, 47));
+					}
 				}
 				sb.append(",");
 				
 				String salesNumber = website.salesNumber;
-				if(salesNumber.contains(",")) {
+				if(salesNumber != null && salesNumber.contains(",")) {
 					sb.append("\""+ description + "\"");
 				}
 				else {
@@ -192,7 +216,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String email = website.email;
-				if(email.contains(",")) {
+				if(email != null && email.contains(",")) {
 					sb.append("\""+ email + "\"");
 				}
 				else {
@@ -201,7 +225,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String frontOfficeHours = website.frontOfficeHours;
-				if(frontOfficeHours.contains(",")) {
+				if(frontOfficeHours != null && frontOfficeHours.contains(",")) {
 					sb.append("\""+ frontOfficeHours + "\"");
 				}
 				else {
@@ -210,7 +234,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String accessHours = website.accessHours;
-				if(accessHours.contains(",")) {
+				if(accessHours != null && accessHours.contains(",")) {
 					sb.append("\""+ accessHours + "\"");
 				}
 				else {
@@ -219,7 +243,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String street = website.street;
-				if(street.contains(",")) {
+				if(street != null && street.contains(",")) {
 					sb.append("\""+ street + "\"");
 				}
 				else {
@@ -228,7 +252,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String city = website.city;
-				if(city.contains(",")) {
+				if(city != null && city.contains(",")) {
 					sb.append("\""+ city + "\"");
 				}
 				else {
@@ -237,7 +261,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String state = website.state;
-				if(state.contains(",")) {
+				if(state != null && state.contains(",")) {
 					sb.append("\""+ state + "\"");
 				}
 				else {
@@ -246,7 +270,7 @@ public class Scraper {
 				sb.append(",");
 				
 				String zip = website.zip;
-				if(zip.contains(",")) {
+				if(zip != null && zip.contains(",")) {
 					sb.append("\""+ zip + "\"");
 				}
 				else {
@@ -271,11 +295,18 @@ public class Scraper {
 	        StringBuilder sb = new StringBuilder();
 			sb.append("Name");
 			sb.append(",");
+			sb.append("URL");
+			sb.append(",");
 			sb.append("Features");
 			sb.append("\n");			
 			for(int i = 0; i < 10; i++) {
 				Facility facility = facilities.get(i);
 				sb.append(facility.name);
+				sb.append(",");
+				
+				String url = facility.url;
+				sb.append(url);
+				
 				ArrayList<String> features = facility.features;
 				if(features == null || features.size() == 0) {
 					sb.append("\n");	
@@ -295,7 +326,7 @@ public class Scraper {
 						sb.append("\n");
 					}
 					else {
-						sb.append(",");
+						sb.append(" / ");
 					}
 				}
 			}
