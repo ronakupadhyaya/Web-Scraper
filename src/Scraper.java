@@ -2,19 +2,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Scraper {
 
 	public static void main(String[] args) {
 		ArrayList<Facility> facilities = readFileByLine("for_ronak_updated_prime_urls.csv");
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < facilities.size(); i++) {
 			Facility facility = facilities.get(i);
 			facility.parse();
 			System.out.println(i + ": " + facility.url);
 		}
 		writeWebsiteFileByLine("website.csv", facilities);
-		writeFeaturesFileByLine("features.csv", facilities);
+//		writeFeaturesFileByLine("features.csv", facilities);
 //		writeUnitsFileByLine("units.csv", facilities);
 	}
 	
@@ -158,7 +160,7 @@ public class Scraper {
 			sb.append("Zip");
 			sb.append("\n");
 			
-			for(int i = 0; i < 10; i++) {
+			for(int i = 0; i < facilities.size(); i++) {
 				Facility facility = facilities.get(i);
 				sb.append(facility.name);
 				sb.append(",");
@@ -226,19 +228,19 @@ public class Scraper {
 				
 				String frontOfficeHours = website.frontOfficeHours;
 				if(frontOfficeHours != null && frontOfficeHours.contains(",")) {
-					sb.append("\""+ frontOfficeHours + "\"");
+					sb.append("\""+ formatFrontOfficeHours(frontOfficeHours) + "\"");
 				}
 				else {
-					sb.append(frontOfficeHours);
+					sb.append(formatFrontOfficeHours(frontOfficeHours));
 				}
 				sb.append(",");
 				
 				String accessHours = website.accessHours;
 				if(accessHours != null && accessHours.contains(",")) {
-					sb.append("\""+ accessHours + "\"");
+					sb.append("\""+ formatAccessHours(accessHours) + "\"");
 				}
 				else {
-					sb.append(accessHours);
+					sb.append(formatAccessHours(accessHours));
 				}
 				sb.append(",");
 				
@@ -299,7 +301,7 @@ public class Scraper {
 			sb.append(",");
 			sb.append("Features");
 			sb.append("\n");			
-			for(int i = 0; i < 10; i++) {
+			for(int i = 0; i < facilities.size(); i++) {
 				Facility facility = facilities.get(i);
 				sb.append(facility.name);
 				sb.append(",");
@@ -367,5 +369,177 @@ public class Scraper {
 			   e.printStackTrace();
 		} 
 		return facilities;
+	}
+	
+	public static String formatAccessHours(String accessHours) {
+		System.out.println("formatAccessHours: " + accessHours);
+		StringBuilder sb = new StringBuilder();
+		if(accessHours.contains("7 Days a Week")) {
+			String time = accessHours.substring(14);
+			String formattedTime = formatTime("Monday", "Sunday", time);
+			sb.append(formattedTime);
+			return sb.toString();
+		}
+		else if(accessHours.contains("Outside")) {
+			return accessHours;
+		}
+		else {
+			String regex;
+			if(accessHours.charAt(accessHours.indexOf("am") - 1) == ' ') {
+				regex = "\\d\\d?:\\d\\d\\s[a|p]m - \\d\\d?:\\d\\d\\s[a|p]m|Closed";
+			}
+			else {
+				regex = "\\d\\d?:\\d\\d[a|p]m - \\d\\d?:\\d\\d[a|p]m|Closed";
+			}
+			String[] arr = accessHours.split(regex);
+			if(rangeExists(arr)) {
+				for(int i = 0; i < arr.length; i++) {
+					System.out.println(arr[i]);
+					String[] days = arr[i].split("-");
+					if(days.length == 2 && i != arr.length - 1) {
+						String startDay = days[0].trim();
+						String endDay = days[1].substring(0, days[1].length() - 2).trim();
+						int start = accessHours.indexOf(arr[i]) + arr[i].length();
+				    	int end = accessHours.indexOf(arr[i + 1]);
+				      	String time = accessHours.substring(start, end);
+				      	String formattedTime = formatAccessHoursTime(startDay, endDay, time);
+				      	sb.append(formattedTime);
+					}
+					else if(days.length == 2 && i == arr.length - 1) {
+						String startDay = days[0].trim();
+						String endDay = days[1].substring(0, days[1].length() - 2).trim();
+						int index = accessHours.indexOf(arr[i]) + arr[i].length();
+				      	String time = accessHours.substring(index);
+				      	String formattedTime = formatAccessHoursTime(startDay, endDay, time);
+				      	sb.append(formattedTime);
+					}
+					else {
+						if(i != arr.length - 1) {
+							int start = accessHours.indexOf(arr[i]);
+							int end = accessHours.indexOf(arr[i + 1]);
+							sb.append(accessHours.substring(start, end).trim() + " ");	
+						}
+						else {
+							int index = accessHours.indexOf(arr[i]);
+							sb.append(accessHours.substring(index).trim());	
+						}
+					}
+				}
+				return replaceDays(sb.toString());
+			}
+			return replaceDays(accessHours);
+		}
+	}
+	
+	public static String replaceDays(String result) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		map.put("Mon", "Monday");
+		map.put("Tue", "Tuesday");
+		map.put("Wed", "Wednesday");
+		map.put("Thu", "Thursday");
+		map.put("Fri", "Friday");
+		map.put("Sat", "Saturday");
+		map.put("Sun", "Sunday");
+		for(String key: map.keySet()) {
+		    result = result.replace(key, map.get(key));
+		}
+		return result;
+	}
+	
+	public static String formatAccessHoursTime(String startDay, String endDay, String time) {
+		StringBuilder sb = new StringBuilder();
+		ArrayList<String> range = getAccessHoursRange(startDay, endDay);
+		for(int i = 0; i < range.size(); i++) {
+			String day = range.get(i);
+			sb.append(day + ": ");
+			sb.append(time + " ");
+		}
+      	return sb.toString();
+	}
+	
+	public static ArrayList<String> getAccessHoursRange(String startDay, String endDay) {
+		ArrayList<String> result = new ArrayList<String>();
+		String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+		int startIndex = Arrays.asList(days).indexOf(startDay);
+		int endIndex = Arrays.asList(days).indexOf(endDay);
+		if(startIndex == -1) {
+			return getRange(startDay, endDay);
+		}
+		for(int i = startIndex; i <= endIndex; i++) {
+			result.add(days[i]);
+		}
+		return result;
+ 	}
+	
+	public static String formatFrontOfficeHours(String officeHours) {
+		StringBuilder sb = new StringBuilder();
+		String regex = "\\d\\d?:\\d\\d[a|p]m - \\d\\d?:\\d\\d[a|p]m|Closed";
+		String[] arr = officeHours.split(regex);
+		if(rangeExists(arr)) {
+			for(int i = 0; i < arr.length; i++) {
+				String[] days = arr[i].split("-");
+				if(days.length == 2 && i != arr.length - 1) {
+					String startDay = days[0].trim();
+					String endDay = days[1].substring(0, days[1].length() - 2).trim();
+					int start = officeHours.indexOf(arr[i]) + arr[i].length();
+			    	int end = officeHours.indexOf(arr[i + 1]);
+			      	String time = officeHours.substring(start, end);
+			      	String formattedTime = formatTime(startDay, endDay, time);
+			      	sb.append(formattedTime);
+				}
+				else if(days.length == 2 && i == arr.length - 1) {
+					String startDay = days[0].trim();
+					String endDay = days[1].substring(0, days[1].length() - 2).trim();
+					int index = officeHours.indexOf(arr[i]) + arr[i].length();
+			      	String time = officeHours.substring(index);
+			      	String formattedTime = formatTime(startDay, endDay, time);
+			      	sb.append(formattedTime);
+				}
+				else {
+					if(i != arr.length - 1) {
+						int start = officeHours.indexOf(arr[i]);
+						int end = officeHours.indexOf(arr[i + 1]);
+						sb.append(officeHours.substring(start, end).trim() + " ");	
+					}
+					else {
+						int index = officeHours.indexOf(arr[i]);
+						sb.append(officeHours.substring(index).trim());	
+					}
+				}
+			}
+			return sb.toString();
+		}
+		return officeHours;
+	}
+	
+	public static String formatTime(String startDay, String endDay, String time) {
+		StringBuilder sb = new StringBuilder();
+		ArrayList<String> range = getRange(startDay, endDay);
+		for(int i = 0; i < range.size(); i++) {
+			String day = range.get(i);
+			sb.append(day + ": ");
+			sb.append(time + " ");
+		}
+      	return sb.toString();
+	}
+	
+	public static ArrayList<String> getRange(String startDay, String endDay) {
+		ArrayList<String> result = new ArrayList<String>();
+		String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+		int startIndex = Arrays.asList(days).indexOf(startDay);
+		int endIndex = Arrays.asList(days).indexOf(endDay);
+		for(int i = startIndex; i <= endIndex; i++) {
+			result.add(days[i]);
+		}
+		return result;
+ 	}
+	
+	public static boolean rangeExists(String[] arr) {
+		for(int i = 0; i < arr.length; i++) {
+			if(arr[i].contains("-")) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
